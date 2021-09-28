@@ -1,0 +1,111 @@
+---
+title: "HW1 Part 1"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+### Data setup
+
+```{r q1data}
+x_i <- c(70, 75, 80, 80, 85, 90)
+y_i <- c(75, 82, 80, 86, 90, 91)
+Data <- data.frame(x_i, y_i)
+```
+
+### a
+
+```{r q1a}
+result <- lm(y_i~x_i, data=Data)
+result
+```
+
+### b
+
+```{r q1b}
+Data$pred <- predict(result, Data)
+mse <- mean((Data$y_i-Data$pred)^2)
+mse
+```
+
+### c
+#### i
+
+```{r q1ci}
+Train <- Data[-nrow(Data), -Data$pred]
+train_result <- lm(y_i~x_i, data=Train)
+train_result
+```
+
+#### ii
+##### Train
+
+```{r q1ciitrain}
+Train$pred <- predict(train_result, Train)
+train_mse <- sum((Train$y_i-Train$pred)^2)/nrow(Train)
+train_mse
+```
+
+##### Test
+
+```{r q1ciitest}
+Test <- Data[nrow(Data), -3]
+Test$pred <- predict(train_result, Test)
+test_mse <- sum((Test$y_i-Test$pred)^2)/nrow(Test)
+test_mse
+```
+
+#### iii
+
+No, because different groups of training data will fit different models.
+
+## 2
+### K = 3
+
+```{r k3}
+Data2 <- Data[,-3]
+
+Data2$euclid <- (abs(Data2$x_i-78)^2)^0.5
+Data2 <- Data2[order(Data2$euclid),]
+
+top3 <- Data2[1:3,]
+pred3 <- mean(top3$y_i)
+pred3
+```
+
+### K = 4
+
+```{r k4}
+top4 <- Data2[1:4,]
+pred4 <- mean(top4$y_i)
+pred4
+```
+
+## 3
+### a
+
+Worse, because we are in danger of overfitting.
+
+### b
+
+Better, because f_hat(x) wouldn't be as good an estimate of f(x).
+
+### c
+
+Worse, because it will try to explain too much of the variance (overfit).
+
+## 4
+### a
+
+Flexible, because they are better at accounting for variance.
+
+### b
+
+Inflexible, because they work better with fewer parameters.
+
+### c
+
+Flexible, because they tend to be better at prediction but more difficult to interpret.

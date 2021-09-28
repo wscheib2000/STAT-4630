@@ -1,0 +1,178 @@
+---
+title: "Lab 4c Quiz"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(199)
+library(faraway)
+library(MASS)
+library(klaR)
+library(ICS)
+```
+
+## 0
+
+```{r}
+wcgs_interest <- wcgs[,c("age", "sdp", "dbp", "cigs", "chd")]
+
+##create training and test data
+sample.data<-sample.int(nrow(wcgs_interest), floor(.50*nrow(wcgs_interest)), replace = F)
+train<-wcgs_interest[sample.data, ]
+test<-wcgs_interest[-sample.data, ]
+```
+
+## 1
+
+Because it is qualitative
+
+## 2
+
+```{r}
+##subset dataframe by gender
+chd_yes<-train[which(train$chd=="yes"),]
+chd_no<-train[which(train$chd=="no"),]
+
+##MVN tests for females
+ICS::mvnorm.kur.test(chd_yes[,1:4])
+ICS::mvnorm.skew.test(chd_yes[,1:4])
+
+##MVN tests for males
+ICS::mvnorm.kur.test(chd_no[,1:4])
+ICS::mvnorm.skew.test(chd_no[,1:4])
+```
+
+Probably don't mean much if our goal is classification, not esimating posterior probabilities.
+
+## 3
+
+```{r}
+##check dummy coding for gender
+contrasts(train$chd)
+
+##Carry out LDA on training data
+lda.chd <- MASS::lda(chd ~ ., data=train)
+##obtain ouput from LDA
+lda.chd
+```
+
+All predictors are positive, so older people, people with higher blood pressure, and people who smoke more will be classified as having chd. The best predictor is age.
+
+## 4
+
+```{r}
+##boundaries based on 2 predictors
+klaR::partimat(chd ~ ., nplots.vert=2, nplots.hor=3, data=train, method="lda")
+```
+
+It takes a very specific and unlikely combination of traits to be classified as having chd.
+
+## 5
+
+```{r}
+##predictions on training data. 
+lda.train <- predict(lda.chd)
+##Confusion matrix on training data. Rows represent actual value, cols represent pred value
+table(train$chd, lda.train$class)
+
+##accuracy on training data
+mean(train$chd == lda.train$class)
+
+##predictions on test data. 
+lda.test <- predict(lda.chd,test)
+##confusion matrix. By default, threshold is 0.5
+table(test$chd,lda.test$class)
+
+##accuracy on test data
+mean(test$chd == lda.test$class)
+
+##posterior probabilities for first 6 observations of test data
+head(lda.test$posterior)
+
+##threshold of 0.2
+table(test$chd, lda.test$posterior[,2]>0.2)
+
+##ROC and AUC
+library(ROCR)
+preds<-lda.test$posterior[,2]
+rates<-ROCR::prediction(preds, test$chd)
+roc_result<-ROCR::performance(rates,measure="tpr", x.measure="fpr")
+plot(roc_result, main="ROC Curve for Whether a Person Has CHD")
+lines(x = c(0,1), y = c(0,1), col="red")
+```
+
+## 6
+
+```{r}
+auc<-ROCR::performance(rates, measure = "auc")
+auc@y.values
+```
+
+## 7
+
+```{r}
+confusion.mat<-table(test$chd,preds > 0.07)
+confusion.mat
+
+accuracy <- (891+89)/(891+89+549+48)
+accuracy
+
+fpr <- 549/(549+891)
+fpr
+
+fnr <- 48/(48+89)
+fnr
+```
+
+## 8
+
+```{r}
+##Use QDA on training data
+qda.chd <- MASS::qda(chd ~ ., train)
+qda.chd
+
+##Quadratic boundaries based on 2 predictors
+klaR::partimat(chd ~ ., data=train, method="qda")
+```
+
+## 9
+
+```{r}
+##predictions on test data
+qda.test <- predict(qda.chd,test)
+table(test$chd,qda.test$class)
+
+##ROC and AUC
+preds.qda<-qda.test$posterior[,2]
+rates.qda<-ROCR::prediction(preds.qda, test$chd)
+roc_result.qda<-ROCR::performance(rates.qda,measure="tpr", x.measure="fpr")
+plot(roc_result.qda, main="ROC Curve for Whether a Person Has CHD")
+lines(x = c(0,1), y = c(0,1), col="red")
+auc<-ROCR::performance(rates.qda, measure = "auc")
+auc@y.values
+```
+
+## 10
+
+```{r}
+confusion.mat<-table(test$chd,preds.qda > 0.07)
+confusion.mat
+
+accuracy <- (932+83)/(932+83+508+54)
+accuracy
+
+fpr <- 508/(508+932)
+fpr
+
+fnr <- 54/(54+83)
+fnr
+```
+
+## 11
+
+LDA (lower accuracy but also lower false negative rate)
+
+## 12
+
+LDA (higher accuracy than logistic while maintaining false negative rate)

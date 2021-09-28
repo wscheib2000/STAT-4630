@@ -1,0 +1,29 @@
+---
+title: "lab2quiz"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. What do you think is the shape of the distribution of the 10000 randomly generated estimated slopes? Briefly explain.
+I expect a normal distribution since the function used to generate the values is rnorm.
+
+## 2. Verify your answer in question 1 by creating a histogram of the 10000 randomly generated estimated slopes.
+```{r slopes_hist}
+hist(store.slope)
+```
+
+## 3. How would the theoretical values of the bias and variance of the estimated slopes change if each of the following changes were made in the code given in lab 02.pdf? Try answering the questions based on statistical theory first, then verify your answer by tweaking the code to run the simulation
+### (a) If the sample size of X was halved, i.e. we used x<-rep(seq(1,10,1),10) to generate the X values?
+Variance and bias should both increase. Variance increased, bias decreased.
+
+### (b) If we simulated data according to Y = 3 + 2X + ϵ, where ϵ ∼ N(0, 1)?
+Variance and bias both stay the same. Verified.
+
+### (c) If the standard deviation of ϵ was doubled, i.e. 2 instead of 1?
+Variance should increase by a factor of 4, bias should not change. Variance incread by a factor of 4, bias doubled.
+
+### (d) If we simulated data according to Y = 3 + 0.2X^2 + ϵ, where ϵ ∼ N(0, 1)?
+Variance and bias should both increase. Verified.

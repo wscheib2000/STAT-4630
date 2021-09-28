@@ -1,0 +1,64 @@
+---
+title: "HW 2 Part 1"
+author: "Will Scheib"
+date: "9/21/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+```{r}
+0.17/(1+0.17)
+```
+
+## 2
+### a
+```{r}
+exp(0.43397)
+```
+The estimated odds of receiving a flu shot for males was 1.54 times that of females.
+
+### b
+$H_0 : \beta_3 = 0$
+$H_A : \beta_3 \ne 0$
+```{r}
+z <- 0.43397/0.52179
+pnorm(-abs(z))
+```
+Do not reject
+
+### c
+```{r}
+c(0.43397-1.96*0.52179, 0.43397+1.96*0.52179)
+```
+
+### d
+They are consistent because 0 is contained in the confidence interval.
+
+### e
+```{r}
+1-pchisq(113.20-105.09,2)
+```
+Can drop
+
+## 3
+```{r}
+mean_a = 8
+mean_not_a = 4
+sd_all = 1.3
+p_a = 0.4
+student = 6.8
+
+thing1<-p_a * (1/(sqrt(2*pi)*sd_all)) * exp((-1/(2*sd_all^2)) * (student-mean_a)^2)
+thing1a<-p_a*pnorm(student,mean_a,sd_all)
+thing2<-thing1+(1-p_a) * (1/(sqrt(2*pi)*sd_all)) * exp((-1/(2*sd_all^2)) * (student-mean_not_a)^2)
+thing2a<-p_a*pnorm(student,mean_a,sd_all)+(1-p_a)*pnorm(student,mean_not_a,sd_all,lower.tail=FALSE)
+thing1/thing2
+thing1a/thing2a
+```
+
+## 4
+QDA for training, LDA for test, because QDA will overfit on training (and thus fit the training data better), but will perform worse when tested on non-training data.

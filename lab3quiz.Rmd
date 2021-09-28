@@ -1,0 +1,131 @@
+---
+title: "Lab 3 Quiz"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Randomly split your data set into training and test data sets, of equal size. For consistency of results, use set.seed(199).
+
+```{r, message=FALSE}
+library(faraway)
+library(ROCR)
+
+set.seed(199)
+sample.data<-sample.int(nrow(wcgs), floor(.50*nrow(wcgs)), replace = F)
+train<-wcgs[sample.data, ]
+test<-wcgs[-sample.data, ]
+```
+
+## 2. Using the training data, create some boxplots to see if there is a difference in the distributions of the quantitative predictors among people who did and did not develop coronoray heart disease, and provide some comments on these boxplots on how they may give insight into this classification question.
+
+```{r}
+boxplot(train$age~train$chd, main="Ages by Whether the Person Had CHD")
+boxplot(train$sdp~train$chd, main="Systolic Blood Pressure by Whether the Person Had CHD")
+boxplot(train$dbp~train$chd, main="Diastolic Blood Pressure by Whether the Person Had CHD")
+boxplot(train$cigs~train$chd, main="Number of Cigarrettes per Day by Whether the Person Had CHD")
+```
+
+## 3. Using the training data, create a two-way table to compare the proportions of men who develop heart disease (or not) between the behavior types. Comment on whether behavior type may influence the log odds of developing heart disease or not.
+
+```{r}
+mytab <- table(train$dibep, train$chd)
+mytab
+prop.table(mytab, 1)
+```
+
+It might, because there is a 6% difference between A and B.
+
+## 4. Using the training data, fit a logistic regression model using all five predictors listed above, and write the estimated logistic regression equation. Interpret the coefficients for age and behavior type, in context.
+
+```{r}
+result_train <- glm(chd~age+sdp+dbp+cigs+dibep, family=binomial, data=train)
+summary(result_train)
+
+contrasts(train$dibep)
+```
+
+With every year older, there is a 6% higher chance of a person having chd. If a person is behavior type B, there is a 60% higher chance that they have chd.
+
+## 5. Are there predictors you will consider dropping from the model? Carry out an appropriate hypothesis test to assess if the predictor(s) can be dropped, and write a conclusion in context.
+
+I might remove dbp.
+
+```{r}
+reduced_train <- glm(chd~age+sdp+cigs+dibep, family=binomial, data=train)
+
+1-pchisq(reduced_train$deviance-result_train$deviance, 1)
+```
+
+Since p>0.05, I will drop dbp.
+
+## 6. Based on your answer to part 5, use an ROC curve to assess the predictive ability of the logistic regression model.
+
+```{r}
+##predicted survival rate for test data based on training data
+preds<-predict(reduced_train,newdata=test, type="response")
+
+##produce the numbers associated with classification table
+class(test$chd)
+rates<-ROCR::prediction(preds, test$chd)
+
+##store the true positive and false postive rates
+roc_result<-ROCR::performance(rates,measure="tpr", x.measure="fpr")
+
+##plot ROC curve and overlay the diagonal line for random guessing
+plot(roc_result, main="ROC Curve")
+lines(x = c(0,1), y = c(0,1), col="red")
+```
+
+## 7. Find the AUC associated with your ROC curve. What does your AUC tell you? Hint: if you did everything correctly up to this point, the AUC should be 0.698601.
+
+```{r}
+auc<-ROCR::performance(rates, measure = "auc")
+auc@y.values
+```
+
+## 8. Create a confusion matrix on the test data using a threshold of 0.5. Report the accuracy, false positive rate (FPR), and false negative rate (FNR) at this threshold.
+
+```{r}
+confusion.mat<-table(test$chd,preds > 0.5)
+confusion.mat
+
+accuracy <- 1440/(1440+137)
+accuracy
+
+fpr <- 0/(0+137)
+fpr
+
+fnr <- 137/(137+0)
+fnr
+```
+
+## 9. Based on the confusion matrix in part 8, a classmate says the logistic regression at this threshold is as good as random guessing. Do you agree with your classmate’s statement? Briefly explain.
+
+No, because it is not split 50/50. Heart disease is rarer than 0.5.
+
+## 10. Discuss if the threshold should be adjusted. Will it be better to raise or lower the threshold? Briefly explain.
+
+We should lower the threshold because heart disease is rare.
+
+## 11. Create another confusion matrix on the test data using a threshold of 0.07. Evaluate the accuracy, the FPR, and the FNR at this threshold.
+
+```{r}
+confusion.mat<-table(test$chd,preds > 0.07)
+confusion.mat
+
+accuracy2 <- (874+90)/(874+90+566+47)
+accuracy2
+
+fpr2 <- 566/(566+874)
+fpr2
+
+fnr2 <- 47/(47+90)
+fnr2
+```
+
+## 12. Comment on the values of the accuracies, FPRs, and FNRs at thresholds 0.5 and 0.07. Which threshold is preferable in this context?
+
+Technically less accurate, however, the lower threshold is prefereable because we would rather have false positives than false negatives.
