@@ -1,0 +1,197 @@
+---
+title: "HW5_q5"
+author: "Will Scheib"
+date: "12/3/2021"
+output: pdf_document
+---
+
+```{r setup, warning=FALSE, message=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+## 5
+```{r}
+mtcars2 <- mtcars
+```
+
+### a
+```{r}
+head(mtcars2)
+```
+We should exclude vs and am because they are categorical, and hierarchical clustering cannot handle categorical variables.
+
+```{r}
+mtcars2 <- mtcars2 %>% select(-c(vs, am))
+```
+
+\newpage
+### b
+```{r}
+hc.complete<-hclust(dist(mtcars2), method="complete")
+
+plot(as.dendrogram(hc.complete), main="HC with Complete Linkage")
+```
+
+\newpage
+### c
+```{r}
+hc.single<-hclust(dist(mtcars2), method="single")
+
+plot(as.dendrogram(hc.single), main="HC with Single Linkage")
+```
+
+\newpage
+### d
+```{r}
+hc.average<-hclust(dist(mtcars2), method="average")
+
+plot(as.dendrogram(hc.average), main="HC with Average Linkage")
+```
+
+\newpage
+### e
+```{r}
+dend.complete.col2<-dendextend::color_labels(hc.complete, k=2)
+plot(as.dendrogram(dend.complete.col2), main="HC with Complete Linkage, 2 Clusters")
+```
+\newpage
+```{r}
+dend.single.col2<-dendextend::color_labels(hc.single, k=2)
+plot(as.dendrogram(dend.single.col2), main="HC with Single Linkage, 2 Clusters")
+```
+\newpage
+```{r}
+dend.average.col2<-dendextend::color_labels(hc.average, k=2)
+plot(as.dendrogram(dend.average.col2), main="HC with Average Linkage, 2 Clusters")
+```
+\newpage
+```{r}
+list(
+  complete=table(cutree(hc.complete,2)),
+  single=table(cutree(hc.single,2)),
+  average=table(cutree(hc.average,2))
+)
+```
+
+\newpage
+### f
+```{r}
+dend.complete.col3<-dendextend::color_labels(hc.complete, k=3)
+plot(as.dendrogram(dend.complete.col3), main="HC with Complete Linkage, 3 Clusters")
+```
+\newpage
+```{r}
+dend.single.col3<-dendextend::color_labels(hc.single, k=3)
+plot(as.dendrogram(dend.single.col3), main="HC with Single Linkage, 3 Clusters")
+```
+\newpage
+```{r}
+dend.average.col3<-dendextend::color_labels(hc.average, k=3)
+plot(as.dendrogram(dend.average.col3), main="HC with Average Linkage, 3 Clusters")
+```
+\newpage
+```{r}
+list(
+  complete=table(cutree(hc.complete,3)),
+  single=table(cutree(hc.single,3)),
+  average=table(cutree(hc.average,3))
+)
+```
+
+\newpage
+### g
+```{r}
+dend.complete.col4<-dendextend::color_labels(hc.complete, k=4)
+plot(as.dendrogram(dend.complete.col4), main="HC with Complete Linkage, 4 Clusters")
+```
+\newpage
+```{r}
+dend.single.col4<-dendextend::color_labels(hc.single, k=4)
+plot(as.dendrogram(dend.single.col4), main="HC with Single Linkage, 4 Clusters")
+```
+\newpage
+```{r}
+dend.average.col4<-dendextend::color_labels(hc.average, k=4)
+plot(as.dendrogram(dend.average.col4), main="HC with Average Linkage, 4 Clusters")
+```
+\newpage
+```{r}
+list(
+  complete=table(cutree(hc.complete,4)),
+  single=table(cutree(hc.single,4)),
+  average=table(cutree(hc.average,4))
+)
+```
+
+\newpage
+### h
+### (i)
+```{r}
+table(cutree(hc.complete,3))
+```
+
+### (ii)
+```{r}
+grps.com<-cutree(hc.complete,3)
+x<-data.frame(mtcars2,grps.com)
+
+aggregate(x[,c(1,3,6)],by=list(x$grps), mean)
+```
+
+### (iii)
+Cluster 1 has high miles per gallon, low displacement, and low weight.
+\newline
+Cluster 2 has middle miles per gallon, middle displacement, and middle weight.
+\newline
+Cluster 3 has low miles per gallon, high displacement, and high weight.
+
+\newpage
+### i
+### (i)
+```{r}
+table(cutree(hc.single,3))
+```
+
+#### (ii)
+```{r}
+grps.com<-cutree(hc.single,3)
+x<-data.frame(mtcars2,grps.com)
+
+aggregate(x[,c(1,3,6)],by=list(x$grps), mean)
+```
+
+### (iii)
+Cluster 1 has high miles per gallon, low displacement, and low weight.
+\newline
+Cluster 2 has low miles per gallon, high displacement, and high weight.
+\newline
+Cluster 3 has low miles per gallon, middle displacement, and high weight.
+
+\newpage
+### j
+### (i)
+```{r}
+table(cutree(hc.average,3))
+```
+
+### (ii)
+```{r}
+grps.com<-cutree(hc.average,3)
+x<-data.frame(mtcars2,grps.com)
+
+aggregate(x[,c(1,3,6)],by=list(x$grps), mean)
+```
+
+### (iii)
+Cluster 1 has high miles per gallon, low displacement, and low weight.
+\newline
+Cluster 2 has low miles per gallon, high displacement, and high weight.
+\newline
+Cluster 3 has low miles per gallon, middle/high displacement, and middle/high weight.
+
+\newpage
+### k
+Our clusters using complete linkage resulted in larger ranges, which is not what we expected because in large data sets, complete linkage tends to result in clusters that are closer together (smaller ranges in means).
+
+In situations where we want more distinct clusters, we should not choose average linkage because it resulted in clusters with similar means, thus making it hard to classify their distinct characteristics.

@@ -1,0 +1,141 @@
+---
+title: "HW4_part1"
+author: "Will Scheib"
+date: "11/5/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 5
+```{r, message=F, warning=F}
+library(tree)
+library(randomForest)
+library(tidyverse)
+students <- read.table("data/students.txt", header=T)
+students$Gender <- factor(students$Gender)
+students$Smoke <- factor(students$Smoke)
+students$Marijuan <- factor(students$Marijuan)
+students$DrivDrnk <- factor(students$DrivDrnk)
+students <- students %>% select(-Student)
+```
+
+### a
+```{r}
+set.seed(2013)
+sample.data<-sample.int(nrow(students), floor(.50*nrow(students)), replace = F)
+train<-students[sample.data, ]
+test<-students[-sample.data, ]
+```
+
+### b
+```{r}
+ols <- lm(GPA~., data=train)
+ols.pred <- predict(ols, test)
+ols.mse <- mean((ols.pred-test$GPA)^2)
+ols.mse
+```
+
+\newpage
+### c
+```{r}
+tree.class.train<-tree::tree(GPA~., data=train)
+plot(tree.class.train)
+text(tree.class.train, cex=0.6, pretty=0)
+summary(tree.class.train)$size
+```
+
+### d
+```{r}
+tree.pred <- predict(tree.class.train, test)
+tree.mse <- mean((tree.pred-test$GPA)^2)
+tree.mse
+```
+
+\newpage
+### e
+```{r}
+set.seed(1)
+cv.class<-tree::cv.tree(tree.class.train, K=10, FUN=prune.tree)
+trees.num.class<-cv.class$size[which.min(cv.class$dev)]
+trees.num.class
+
+prune.class<-tree::prune.tree(tree.class.train, best=trees.num.class)
+
+plot(prune.class)
+text(prune.class, cex=0.6, pretty=0)
+```
+The predicted GPA for students who study fewer than 11 hours studying per week is 2.898, and for students who study 11 hours per week or more is 3.222.
+
+### g
+```{r}
+pruned.pred <- predict(prune.class, test)
+pruned.mse <- mean((pruned.pred-test$GPA)^2)
+pruned.mse
+```
+
+\newpage
+### h
+```{r}
+set.seed(2)
+bag.class<-randomForest::randomForest(GPA~., data=train, mtry=7, importance=TRUE)
+
+randomForest::varImpPlot(bag.class)
+
+bagging.pred <- predict(bag.class, test)
+bagging.mse <- mean((bagging.pred-test$GPA)^2)
+bagging.mse
+```
+StudyHrs is easily the most important predictor of GPA.
+
+\newpage
+### i
+```{r}
+set.seed(2)
+rf.class<-randomForest::randomForest(GPA~., data=train, mtry=3, importance=TRUE)
+
+randomForest::varImpPlot(rf.class)
+
+rf.pred <- predict(rf.class, test)
+rf.mse <- mean((rf.pred-test$GPA)^2)
+rf.mse
+```
+StudyHrs is easily the most important predictor of GPA.
+
+\newpage
+### j
+```{r}
+set.seed(2)
+boost.class<-gbm::gbm(GPA~., data=train, shrinkage=0.0001, n.trees=5000, interaction.depth=1)
+
+summary(boost.class)
+
+plot(boost.class,i="StudyHrs")
+
+boost.pred<-predict(boost.class, newdata=test, n.trees=5000, type = "response")
+boost.mse <- mean((boost.pred-test$GPA)^2)
+boost.mse
+```
+StudyHrs is easily the most important predictor of GPA.
+
+### k
+```{r}
+c(
+  ols.mse=ols.mse,
+  tree.mse=tree.mse,
+  pruned.mse=pruned.mse,
+  bagging.mse=bagging.mse,
+  rf.mse=rf.mse,
+  boost.mse=boost.mse
+)
+```
+OLS had the lowest test MSE.
+
+\newpage
+### l
+```{r}
+summary(ols)$coefficients
+```
+StudyHrs was clearly the best predictor according to all of the tree models, but OLS gives a very different result. It doesn't see StudyHrs as the most important predictor at all.

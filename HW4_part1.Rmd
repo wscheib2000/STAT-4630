@@ -1,0 +1,37 @@
+---
+title: "HW4_part1"
+author: "Will Scheib"
+date: "11/5/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+### a
+Decreases
+### b
+Increases
+### c
+Decreases initially, then increases
+### d
+Decreases
+### e
+Increases
+### f
+Remains constant
+
+## 2
+### a
+50.44
+### b
+58.56
+### c
+52.80
+### d
+On Post-It note
+
+## 3
+Prefers college basketball (Not football)

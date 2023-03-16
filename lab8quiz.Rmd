@@ -1,0 +1,109 @@
+---
+title: "lab8quiz"
+author: "Will Scheib"
+date: "11/5/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR2)
+library(tidyverse)
+library(tree)
+```
+
+## 9
+### a
+```{r}
+set.seed(11)
+OJ2 <- OJ %>% select(-STORE)
+
+sample.data<-sample.int(nrow(OJ), 800, replace = F)
+train<-OJ2[sample.data, ]
+test<-OJ2[-sample.data, ]
+```
+
+### b
+```{r}
+tree.class.train <- tree::tree(Purchase~., data=train)
+summary(tree.class.train)
+```
+Training error rate: 0.1438
+Terminal nodes: 10
+
+### c
+```{r}
+tree.class.train
+```
+64 observations reached this node.
+0.98437500 purchased MM.
+
+### d
+```{r}
+plot(tree.class.train)
+text(tree.class.train, cex=0.6, pretty=0)
+```
+
+### e
+```{r}
+tree.pred.test<-predict(tree.class.train, newdata=test, type="class")
+head(tree.pred.test)
+
+pred.probs<-predict(tree.class.train, newdata=test)
+head(pred.probs)
+
+tree.conf.mat <- table(test$Purchase, tree.pred.test)
+
+c(test.error.rate=(tree.conf.mat["CH", "MM"]+tree.conf.mat["MM", "CH"]) / sum(tree.conf.mat))
+```
+
+### f
+```{r}
+set.seed(22)
+cv.class<-tree::cv.tree(tree.class.train, K=10, FUN=prune.misclass)
+cv.class
+```
+
+### g
+```{r}
+plot(cv.class$size, cv.class$dev,type='b')
+```
+
+### h
+4 corresponds to the lowest cross-validated classification error rate
+
+### i
+```{r}
+trees.num.class<-cv.class$size[which.min(cv.class$dev)]
+trees.num.class
+
+prune.class<-tree::prune.misclass(tree.class.train, best=trees.num.class)
+prune.class
+
+plot(prune.class)
+text(prune.class, cex=0.75, pretty=0)
+```
+
+### j
+```{r}
+tree.misclass <- summary(tree.class.train)$misclass
+pruned.misclass <- summary(prune.class)$misclass
+c(
+  tree.train.error=tree.misclass[1]/tree.misclass[2],
+  pruned.train.error=pruned.misclass[1]/pruned.misclass[2]
+)
+```
+
+### k
+```{r}
+prune.pred.test<-predict(prune.class, newdata=test, type="class")
+head(prune.pred.test)
+
+prune.conf.mat <- table(test$Purchase, prune.pred.test)
+
+c(
+  tree.test.error=(tree.conf.mat["CH", "MM"]+tree.conf.mat["MM", "CH"]) / sum(tree.conf.mat),
+  prune.test.error=(prune.conf.mat["CH", "MM"]+prune.conf.mat["MM", "CH"]) / sum(prune.conf.mat)
+)
+```
+Interesting how the prune train error is higher but the prune test error is lower.

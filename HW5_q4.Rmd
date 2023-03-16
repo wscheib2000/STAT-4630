@@ -1,0 +1,64 @@
+---
+title: "HW5_q4"
+author: "Will Scheib"
+date: "12/3/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 4
+```{r}
+swiss <- swiss
+```
+
+### a
+```{r}
+pr.out<-prcomp(swiss, scale=TRUE)
+
+pr.out$rotation
+```
+
+\newpage
+### b
+```{r}
+# change signs to make interpretation more intuitive,
+# so that positive scores are above average values
+pr.out$rotation<- -pr.out$rotation
+pr.out$x<- -pr.out$x
+
+# check first and second PCs
+pr.out$rotation[,1:2]
+```
+Higher Fertility, Agriculture, Catholic, and Infant Mortality all increase the first PC, but higher Examination and Education decrease it. Infant Mortality has the least impact, whereas the rest have similar impacts.
+
+Higher Agriculture increases the second PC, but higher Fertility, Examination, Education, Catholic, and Infant Mortality decreases it. Infant Mortality has the highest impact, followed by Agriculture and Fertility.
+
+\newpage
+### c
+```{r}
+# create biplot
+biplot(pr.out, scale=0)
+```
+High examination and education. Low infant mortality, Catholic, and fertility. Middle agriculture.
+
+\newpage
+### d
+```{r}
+# variance of each PC
+pr.var<-pr.out$sdev^2
+
+# proportion of variance in features explained by each PC
+pve<-pr.var/sum(pr.var)
+
+# Scree plot
+plot(pve, xlab="Principal Component", ylab="Proportion of Variance Explained", main="Scree Plot", ylim=c(0,1),type='b')
+```
+\newpage
+```{r}
+# Cumulative plot
+plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Variance Explained", main="Cumulative Proportion", ylim=c(0,1),type='b')
+```
+Two, because after PC2, each principal component significantly decreases interpretability, but only slightly increases the amount of variance explained.
